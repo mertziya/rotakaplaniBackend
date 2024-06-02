@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from closed_form_chosencust import optimizationAlgo  # Adjust the import according to your file structure
 import os
+from merttson import calculate_routes_and_convert_to_json
 
 app = Flask(__name__)
 CORS(app)
@@ -12,17 +13,29 @@ app.config['ALLOWED_EXTENTIONS'] = {'xlsx', 'xls'}
 def optimize():
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
-
+    
+    print(request)
     file = request.files['file']
+    selection = request.form.get('selection')
+
+    assert selection != None
 
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
     if file:
-        filepath = os.path.join("./chosen_customers.xlsx")
+        filepath = os.path.join("./chosen_customersHH.xlsx")
         print('File saved')
         file.save(filepath)
-        output = optimizationAlgo()        
+        print(f"Selection: {selection}")
+        output = None
+        if selection == "1":
+            output = optimizationAlgo()
+        elif selection == "0":
+            output = calculate_routes_and_convert_to_json(filepath,'./distance_matrix.xlsx')
+
+        print(output) 
+
         return jsonify({"message": "File uploaded successfully", "data": output}), 200
     
 
